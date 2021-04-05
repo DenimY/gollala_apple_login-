@@ -1,0 +1,107 @@
+package main
+
+import (
+	"fmt"
+	"github.com/BillSJC/appleLogin"
+	"github.com/labstack/echo"
+	"net/http"
+)
+
+type AppleConfig struct {
+	TeamID      string      //Your Apple Team ID
+	ClientID    string      //Your Service which enable sign-in-with-apple service
+	RedirectURI string      //Your RedirectURI config in apple website
+	KeyID       string      //Your Secret Key ID
+	AESCert     interface{} //Your Secret Key Created By X509 package
+}
+
+func main() {
+
+	e := echo.New()
+
+	//http.HandleFunc("/hello", HelloServer)
+	//err := http.ListenAndServeTLS(":443", "server.crt", "server.key", nil)
+	//if err != nil {
+	//	log.Fatal("ListenAndServe: ", err)
+	//}
+
+	e.GET("/get-apple", func(c echo.Context) error {
+		fmt.Println("In get-apple: ", c)
+
+		return c.String(http.StatusOK, "Hello World!")
+	})
+
+	e.POST("/", func(c echo.Context) error {
+
+		return c.String(http.StatusOK, "Hello World!")
+	})
+
+	e.GET("/redirect", appleSignInLogic)
+
+	//e.POST("/redirect", appleSignInLogic)
+
+	//e.Logger.Fatal(e.Start(":1323")) // localhost:1323
+	e.Logger.Fatal(e.StartTLS(":1323", "../../ssl/localhost.crt", "../../ssl/localhost.key")) // localhost:1323
+	//e.Logger.Fatal(e.StartTLS(":1323", "../../ssl/local.example.com/cert.pem", "../../ssl/local.example.com/key.pem")) // localhost:1323
+	//e.Logger.Fatal(e.StartTLS(":1323", "../../ssl/minica.pem", "../../ssl/minica-key.pem")) // localhost:1323
+	//e.Logger.Fatal(e.StartTLS(":1323", "../../ssl/127.0.0.1/cert.pem", "../../ssl/127.0.0.1/key.pem")) // localhost:1323
+	//e.Logger.Fatal(e.StartTLS(":1323", "../../ssl/local.example.com/cert.pem", "../../ssl/local.example.com/key.pem")) // localhost:1323
+	e.Logger.Fatal(e.StartTLS(":1323", "../../ssl/certs/local.example.com/cert.pem", "../../ssl/certs/local.example.com/key.pem")) // localhost:1323
+	e.Logger.Fatal(e.StartTLS(":1323", "../../ssl/server.crt", "../../ssl/server.key"))                                            // localhost:1323
+}
+
+func appleSignInLogic(c echo.Context) error {
+	fmt.Println("IN SIGN IN ")
+	fmt.Println("c :" + c.FormValue("code"))
+
+	params := make(map[string]string)
+	err := c.Bind(&params)
+
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Print("params : ")
+	fmt.Println(params)
+	fmt.Println(params["code"])
+
+	fmt.Println("1")
+	fmt.Println(c.String(http.StatusOK, "teste"))
+	fmt.Println("2")
+	fmt.Print(c)
+	fmt.Println("3")
+	a := appleLogin.InitAppleConfig(
+		"5NX4697WZG",                            //Team ID
+		"com.ch2ho.hybridshop.gollala.services", //Client ID (Service ID)
+		"https://www.example.com/test",          //Callback URL
+		"T8HKCBDAH9")                            //Key ID
+
+	//import cert
+	err = a.LoadP8CertByFile("auth/AuthKey_T8HKCBDAH9.p8") //path to cert file
+	//or you can load cert from a string
+
+	//if err != nil {
+	//	fmt.println(err) minica -domains local.example.com,localhost -ip-addresses 127.0.0.1
+	//}
+
+	//err = a.LoadP8CertByByte(err)
+
+	if err != nil {
+		panic(err)
+	}
+
+	//create callback URL
+	callbackURL := a.CreateCallbackURL("state here")
+	fmt.Println(callbackURL)
+
+	// ... some code to get Apple`s AuthorizationCode
+	code := "xxxx"
+	token, err := a.GetAppleToken(code, 3600)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("RESULT :   ")
+	fmt.Println(token)
+
+	return c.String(http.StatusOK, "success")
+}

@@ -8,11 +8,11 @@ const MyAppleSigninButton = () => (
         /** Auth options passed to AppleID.auth.init() */
         authOptions={{
             /** Client ID - eg: 'com.example.com' */
-            clientId: 'com.example.web',
+            clientId: 'com.ch2ho.hybridshop.gollala.services',
             /** Requested scopes, seperated by spaces - eg: 'email name' */
             scope: 'email name',
             /** Apple's redirectURI - must be one of the URIs you added to the serviceID - the undocumented trick in apple docs is that you should call auth from a page that is listed as a redirectURI, localhost fails */
-            redirectURI: 'https://example.com',
+            redirectURI: "https://local.example.com:1323/redirect",
             /** State string that is returned with the apple response */
             state: 'state',
             /** Nonce */
@@ -20,6 +20,7 @@ const MyAppleSigninButton = () => (
             /** Uses popup auth instead of redirection */
             // usePopup: ${authOptions.usePopup},
             usePopup: true,
+            responseMode:"form_post"
         }} // REQUIRED
         /** General props */
         uiType="dark"
@@ -37,8 +38,8 @@ const MyAppleSigninButton = () => (
         /** Apple image props */
         iconProp={{style: {marginTop: '10px'}}} // default = undefined
         /** render function - called with all props - can be used to fully customize the UI by rendering your own component  */
-        // render={(props) => <button {...props}>My Custom Button</button>}
-        render={(props) => <AppleLogin clientId="com.react.apple.login" redirectURI="https://redirectUrl.com"/>}
+        render={(props) => <button {...props}>My Custom Button</button>}
+        // render={(props) => <AppleLogin clientId="com.react.apple.login" redirectURI="https://redirectUrl.com"/>}
     />
 );
 
