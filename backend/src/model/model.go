@@ -13,6 +13,5 @@ type SignInBody struct {
 }
 
 type SignUpBody struct {
-	Connect bool   `json:"connect"`
-	UserId  string `json:"userId"`
+	UserId string `json:"userId"`
 }

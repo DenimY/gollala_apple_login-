@@ -2,21 +2,19 @@ package main
 
 import (
 	"fmt"
-	"github.com/BillSJC/appleLogin"
 	"github.com/denimY/gollala_apple_login-/backend/src/config"
 	url_conf "github.com/denimY/gollala_apple_login-/backend/src/config/url"
 	apiModel "github.com/denimY/gollala_apple_login-/backend/src/model"
 	math_util "github.com/denimY/gollala_apple_login-/backend/src/util"
 	"github.com/labstack/echo"
 	"github.com/parnurzeal/gorequest"
+	jwt2 "gopkg.in/square/go-jose.v2/jwt"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"net/url"
 
 	"github.com/dgrijalva/jwt-go"
-
-	jwt2 "gopkg.in/square/go-jose.v2/jwt"
 )
 
 type AppleConfig struct {
@@ -31,19 +29,13 @@ func main() {
 
 	e := echo.New()
 
-	//http.HandleFunc("/hello", HelloServer)
-	//err := http.ListenAndServeTLS(":443", "server.crt", "server.key", nil)
-	//if err != nil {
-	//	log.Fatal("ListenAndServe: ", err)
-	//}
+	e.POST("/", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Hello World!")
+	})
 
 	e.GET("/getAppleUrl", func(c echo.Context) error {
 		state := c.QueryParam("state")
 		return c.String(http.StatusOK, getAppleCallbackUrl(state))
-	})
-
-	e.POST("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello World!")
 	})
 
 	e.POST("/redirect", appleSignInLogic)
@@ -72,10 +64,11 @@ func getAppleCallbackUrl(state string) string {
 
 	return callbackURL
 
+	//
+
 }
 
 func appleSignInLogic(c echo.Context) error {
-	fmt.Println("IN SIGN IN ")
 	fmt.Println("c :" + c.FormValue("user"))
 
 	params := make(map[string]interface{})
@@ -89,7 +82,8 @@ func appleSignInLogic(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, `"{"message": "wrong state value. set 'signIn' or 'signUp'"}"`)
 	}
 
-	//https://local.example.com:1323/redirect
+	// get Apple token losic <- (not use current)
+	/*//https://local.example.com:1323/redirect
 	a := appleLogin.InitAppleConfig(
 		"5NX4697WZG",                              //Team ID
 		"com.ch2ho.hybridshop.gollala.services",   //Client ID (Service ID)
@@ -115,15 +109,15 @@ func appleSignInLogic(c echo.Context) error {
 	fmt.Println("RESULT :   ")
 	fmt.Println(token)
 
+	tokenId := token.IDToken
+	*/
+
 	claims := jwt.MapClaims{}
 
-	tokenId := token.IDToken
+	tokenId := params["id_token"]
 
-	_token2, _ := jwt2.ParseSigned(tokenId)
+	_token2, _ := jwt2.ParseSigned(fmt.Sprintf("%v", tokenId))
 	_ = _token2.UnsafeClaimsWithoutVerification(&claims)
-
-	fmt.Println(claims)
-	fmt.Println("success")
 
 	//state := params["state"]
 	if state == "signIn" {
@@ -194,8 +188,7 @@ func signInClayfulApi(sub string) (*http.Response, error) {
 func signUpClayfulApi(sub string) (*http.Response, error) {
 
 	jsonBody := apiModel.SignUpBody{
-		Connect: true,
-		UserId:  sub,
+		UserId: sub,
 	}
 
 	resp, body, errs := gorequest.New().Post(url_conf.SignUpClayPulUserId).
